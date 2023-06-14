@@ -12,7 +12,10 @@ static hash_t _xobjGenHash(void *obj) {
     return siphash(((xobj *)obj)->data, ((xobj *)obj)->len, "0123456789ABCDEF");
 }
 
-int xobjCmp(xobj *obj1, xobj *obj2) {
+int xobjCmp(void *obj1_, void *obj2_) {
+    xobj *obj1 = (xobj *)obj1_;
+    xobj *obj2 = (xobj *)obj2_;
+
     if (obj1->type != obj2->type) {
         return 0;
     }
@@ -150,11 +153,11 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
 void htdbTest() {
     xdb *db = xdbNew('i', 'b');
 
-    _xdbSetIntBytes(db, 1, "hello\x00", 6);
+    _xdbSetBytesBytes(db, "wb", 2, "hello\x00", 6);
 
     char *value;
     uint8_t value_len;
-    _xdbGetIntBytes(db, 1, &value, &value_len);
+    _xdbGetBytesBytes(db, "wb", 2, &value, &value_len);
 
     printf("value: %s\n", value);
 }

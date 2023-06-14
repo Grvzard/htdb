@@ -39,6 +39,8 @@ static int
 _DictKeys_Set(DictKeys* dk, DictKeyType key, DictValueType value);
 static void
 _DictKeys_Free(DictKeys* dk);
+static void
+_DictKeys_ShallowFree(DictKeys* dk);
 static ix_t
 _DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash);
 static ix_t
@@ -51,6 +53,17 @@ static void
 _DictKeys_BuildIndices(DictKeys* dk, DictKeyEntry* newentries, size_t nentries);
 static size_t
 _DictKeys_GetHashPosition(DictKeys* dk, hash_t hash, ix_t index);
+static void
+_DictKeyEntry_Free(DictKeyEntry* ep) {
+    if (ep->key != NULL) {
+        free(ep->key);
+        ep->key = NULL;
+    }
+    if (ep->value != NULL) {
+        free(ep->value);
+        ep->value = NULL;
+    }
+}
 
 static inline hash_t
 _DictKeys_DefaultKeyHashFunc(DictKeyType key) {
@@ -138,7 +151,7 @@ calc_log2_keysize(size_t minsize) {
 static void
 _dictResize(Dict* mp) {
     DictKeys* oldkeys = mp->keys;
-    size_t nentries = mp->used;
+    size_t used = mp->used;
 
     uint8_t new_log2_size = calc_log2_keysize(GROWTH_RATE(mp));
 
@@ -149,17 +162,18 @@ _dictResize(Dict* mp) {
     // }
     assert(mp->keys != NULL);
 
-    assert(mp->keys->dk_usable >= nentries);
+    assert(mp->keys->dk_usable >= used);
 
     DictKeyEntry* old_entries = DK_ENTRIES(oldkeys);
     DictKeyEntry* new_entries = DK_ENTRIES(mp->keys);
-    if (oldkeys->dk_nentries == nentries) {
-        memcpy(new_entries, old_entries, nentries * sizeof(DictKeyEntry));
-        _DictKeys_BuildIndices(mp->keys, new_entries, nentries);
+    if (oldkeys->dk_nentries == used) {
+        memcpy(new_entries, old_entries, used * sizeof(DictKeyEntry));
+        _DictKeys_BuildIndices(mp->keys, new_entries, used);
     } else {
         DictKeyEntry* ep = old_entries;
-        for (ix_t ix = 0; ix < nentries; ix++, ep++) {
+        for (ix_t ix = 0; ix < used; ix++, ep++) {
             for (; _DictKeys_Lookup(oldkeys, ep->key, ep->hash) < 0;) {
+                _DictKeyEntry_Free(ep);
                 ep++;
             }
             size_t i = _DictKeys_FindEmptySlot(mp->keys, ep->hash);
@@ -167,10 +181,10 @@ _dictResize(Dict* mp) {
         }
     }
 
-    _DictKeys_Free(oldkeys);
+    _DictKeys_ShallowFree(oldkeys);
 
-    mp->keys->dk_usable -= nentries;
-    mp->keys->dk_nentries = nentries;
+    mp->keys->dk_usable -= used;
+    mp->keys->dk_nentries = used;
 }
 
 static void
@@ -211,6 +225,7 @@ _DictKeys_Set(DictKeys* dk, DictKeyType key, DictValueType value) {
     } else {
         // Update Key
         ep = &DK_ENTRIES(dk)[ix];
+        _DictKeyEntry_Free(ep);
     }
     ep->key = key;
     ep->hash = hash;
@@ -303,6 +318,17 @@ _DictKeys_GetHashPosition(DictKeys* dk, hash_t hash, ix_t index) {
 
 static void
 _DictKeys_Free(DictKeys* dk) {
+    DictKeyEntry* ep0 = DK_ENTRIES(dk);
+    size_t nentries = dk->dk_nentries;
+    for (size_t i = 0; i < nentries; i++) {
+        DictKeyEntry* ep = &ep0[i];
+        _DictKeyEntry_Free(ep);
+    }
+    free(dk);
+}
+
+static void
+_DictKeys_ShallowFree(DictKeys* dk) {
     free(dk);
 }
 
@@ -346,6 +372,7 @@ _DictKeys_SetIndex(DictKeys* dk, size_t i, ix_t ix) {
         indices[i] = (int32_t)ix;
     }
 }
+
 
 #ifdef DICT_TEST
 extern void

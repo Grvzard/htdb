@@ -14,12 +14,9 @@ typedef uint64_t xhash_t;
 typedef enum {
     XOBJ_TYPE_INT = 0,
     XOBJ_TYPE_BYTES = 1,
-    XOBJ_TYPE_FLOAT = 2,
-    XOBJ_TYPE_VARINT = 3,
+    // XOBJ_TYPE_FLOAT = 2,
+    // XOBJ_TYPE_VARINT = 3,
     // XOBJ_TYPE_BOOL,
-    // XOBJ_TYPE_NULL,
-    // XOBJ_TYPE_ARRAY,
-    // XOBJ_TYPE_OBJECT,
 } xobj_type;
 
 typedef struct {
