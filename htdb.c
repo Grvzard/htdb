@@ -1,8 +1,8 @@
 
-
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include "siphash.h"
 #include "htdb.h"
@@ -15,7 +15,6 @@ static hash_t _xobjGenHash(void *obj) {
 int xobjCmp(void *obj1_, void *obj2_) {
     xobj *obj1 = (xobj *)obj1_;
     xobj *obj2 = (xobj *)obj2_;
-
     if (obj1->type != obj2->type) {
         return 0;
     }
@@ -31,9 +30,7 @@ int xobjCmp(void *obj1_, void *obj2_) {
 
 xdb *xdbNew(char key_type, char value_type) {
     xdb *db = malloc(sizeof(xdb));
-    db->table = dictNew();
-    db->table->keys->keyCmpFunc = xobjCmp;
-    db->table->keys->keyHashFunc = _xobjGenHash;
+    db->table = dictNewCustom(xobjCmp, _xobjGenHash);
 
     return db;
 }
@@ -52,6 +49,7 @@ xobj *xobjNew(uint8_t type, uint8_t *data, uint8_t len) {
     return obj;
 }
 
+// inner dict will call free(obj) directly, so the impl here should not do anything more
 void xobjFree(xobj *obj) {
     free(obj);
 }
@@ -153,12 +151,32 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
 void htdbTest() {
     xdb *db = xdbNew('i', 'b');
 
-    _xdbSetBytesBytes(db, "wb", 2, "hello\x00", 6);
-
     char *value;
     uint8_t value_len;
-    _xdbGetBytesBytes(db, "wb", 2, &value, &value_len);
 
-    printf("value: %s\n", value);
+    _xdbSetBytesBytes(db, "wb", 2, "hello2", 7);
+    if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 1) {
+        printf("value: %s\n", value);
+    }
+
+    for (uint64_t i = 0; i < 100; i++) {
+        if (i == 32) {
+            _xdbSetIntBytes(db, i, "hello32", 8);
+        } else {
+            _xdbSetIntBytes(db, i, "hello", 6);
+        }
+    }
+    if (_xdbGetIntBytes(db, 0, &value, &value_len) == 1) {
+        printf("value: %s\n", value);
+    }
+    if (_xdbGetIntBytes(db, 32, &value, &value_len) == 1) {
+        printf("value: %s\n", value);
+    }
+
+    if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 1) {
+        printf("value: %s\n", value);
+    }
+
+    xdbFree(db);
 }
 #endif

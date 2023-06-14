@@ -62,6 +62,10 @@ typedef struct {
     // number of bytes needed for the dictkeys object
     size_t dk_size;
 
+    int (*keyCmpFunc)(DictKeyType key1, DictKeyType key2);
+
+    hash_t (*keyHashFunc)(DictKeyType key);
+
     DictKeys* keys;
 } Dict;
 
@@ -69,6 +73,11 @@ typedef struct {
 // >> external API
 extern Dict*
 dictNew(void);
+extern Dict*
+dictNewCustom(
+    int (*keyCmpFunc)(DictKeyType key1, DictKeyType key2),
+    hash_t (*keyHashFunc)(DictKeyType key)
+);
 extern Dict*
 dictNewPresized(size_t size);
 extern DictValueType

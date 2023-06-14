@@ -32,7 +32,7 @@ calc_log2_keysize(size_t minsize);
 static void
 _dictResize(Dict* mp);
 static DictKeys*
-_DictKeys_New(uint8_t log2_size);
+_DictKeys_New(Dict* mp, uint8_t log2_size);
 static int
 _DictKeys_Get(DictKeys* dk, DictKeyType key, DictValueType* value);
 static int
@@ -82,10 +82,25 @@ dictNew(void) {
 }
 
 extern Dict*
+dictNewCustom(int (*keyCmpFunc)(DictKeyType, DictKeyType),
+              hash_t (*keyHashFunc)(DictKeyType)) {
+    Dict* mp = (Dict*)malloc(sizeof(Dict));
+    mp->used = 0;
+    mp->keyCmpFunc = keyCmpFunc;
+    mp->keyHashFunc = keyHashFunc;
+    mp->keys = _DictKeys_New(mp, calc_log2_keysize(1));
+
+    return mp;
+}
+
+extern Dict*
 dictNewPresized(size_t size) {
     Dict* mp = (Dict*)malloc(sizeof(Dict));
     mp->used = 0;
-    mp->keys = _DictKeys_New(calc_log2_keysize(size));
+    mp->keyCmpFunc = _DictKeys_DefaultKeyCmpFunc;
+    mp->keyHashFunc = _DictKeys_DefaultKeyHashFunc;
+    mp->keys = _DictKeys_New(mp, calc_log2_keysize(size));
+
     return mp;
 }
 
@@ -155,11 +170,7 @@ _dictResize(Dict* mp) {
 
     uint8_t new_log2_size = calc_log2_keysize(GROWTH_RATE(mp));
 
-    mp->keys = _DictKeys_New(new_log2_size);
-    // if (mp->keys == NULL) {
-    //     mp->keys = oldkeys;
-    //     return;
-    // }
+    mp->keys = _DictKeys_New(mp, new_log2_size);
     assert(mp->keys != NULL);
 
     assert(mp->keys->dk_usable >= used);
@@ -211,7 +222,6 @@ _DictKeys_Get(DictKeys* dk, DictKeyType key, DictValueType* value) {
 static int
 _DictKeys_Set(DictKeys* dk, DictKeyType key, DictValueType value) {
     hash_t hash = dk->keyHashFunc(key);
-    int ret = 0;
     assert(dk->dk_usable > 0);
     ix_t ix = _DictKeys_Lookup(dk, key, hash);
     DictKeyEntry* ep;
@@ -234,7 +244,7 @@ _DictKeys_Set(DictKeys* dk, DictKeyType key, DictValueType value) {
 }
 
 static DictKeys*
-_DictKeys_New(uint8_t log2_size) {
+_DictKeys_New(Dict *mp, uint8_t log2_size) {
     DictKeys* dk;
     uint8_t index_bytes;
     if (log2_size < 8) {
@@ -259,8 +269,8 @@ _DictKeys_New(uint8_t log2_size) {
     dk->dk_index_bytes = index_bytes;
     dk->dk_usable = usable;
     dk->dk_nentries = 0;
-    dk->keyCmpFunc = _DictKeys_DefaultKeyCmpFunc;
-    dk->keyHashFunc = _DictKeys_DefaultKeyHashFunc;
+    dk->keyCmpFunc = mp->keyCmpFunc;
+    dk->keyHashFunc = mp->keyHashFunc;
     memset(&dk->dk_indices[0], 0xff, dk_size * index_bytes);
     memset(DK_ENTRIES(dk), 0, usable * entry_bytes);
     return dk;
