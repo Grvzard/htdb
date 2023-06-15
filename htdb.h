@@ -1,6 +1,9 @@
 
 #ifndef _HTDB_H_
 #define _HTDB_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 #include "dict.h"
@@ -31,13 +34,23 @@ typedef struct {
 
 } xdb;
 
+
 xdb *xdbNew(char key_type, char val_type);
 void xdbFree(xdb *db);
 // void xdbDump(xdb *db, char *fpath);
+int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_len);
+int _xdbSetIntInt(xdb *db, uint64_t key_, uint64_t value_);
+int _xdbSetBytesBytes(xdb *db, const char *key_, uint8_t key_len, const char *value_, uint8_t value_len);
+int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len);
+int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_, uint8_t *value_len);
+int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value);
 
 
 #ifdef HTDB_TEST
 void htdbTest(void);
 #endif  // HTDB_TEST
 
+#ifdef __cplusplus
+}
+#endif
 #endif  // _HTDB_H_

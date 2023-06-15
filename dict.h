@@ -11,6 +11,9 @@
 
 #ifndef _DICT_H_
 #define _DICT_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -106,4 +109,7 @@ dictTest5(void);
 #endif
 // << external API
 
+#ifdef __cplusplus
+}
+#endif
 #endif  // _DICT_H_
