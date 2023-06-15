@@ -96,7 +96,8 @@ int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len) {
     }
     xobj *valobj = dictGet(db->table, keyobj);
 
-    *value_ = (char *)valobj->data;
+    *value_ = (char *)(&valobj->data);
+    *value_len = valobj->len;
 
     xobjFree(keyobj);
     return 0;
@@ -110,7 +111,8 @@ int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_,
     }
     xobj *valobj = dictGet(db->table, keyobj);
 
-    *value_ = (char *)valobj->data;
+    *value_ = (char *)(&valobj->data);
+    *value_len = valobj->len;
 
     free(keyobj);
     return 0;
@@ -155,8 +157,8 @@ void htdbTest() {
     uint8_t value_len;
 
     _xdbSetBytesBytes(db, "wb", 2, "hello2", 7);
-    if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 1) {
-        printf("value: %s\n", value);
+    if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 0) {
+        printf("value: %s, len: %u\n", value, value_len);
     }
 
     for (uint64_t i = 0; i < 100; i++) {
@@ -166,15 +168,15 @@ void htdbTest() {
             _xdbSetIntBytes(db, i, "hello", 6);
         }
     }
-    if (_xdbGetIntBytes(db, 0, &value, &value_len) == 1) {
-        printf("value: %s\n", value);
+    if (_xdbGetIntBytes(db, 0, &value, &value_len) == 0) {
+        printf("value: %s, len: %u\n", value, value_len);
     }
-    if (_xdbGetIntBytes(db, 32, &value, &value_len) == 1) {
-        printf("value: %s\n", value);
+    if (_xdbGetIntBytes(db, 32, &value, &value_len) == 0) {
+        printf("value: %s, len: %u\n", value, value_len);
     }
 
-    if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 1) {
-        printf("value: %s\n", value);
+    if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 0) {
+        printf("value: %s, len: %u\n", value, value_len);
     }
 
     xdbFree(db);
