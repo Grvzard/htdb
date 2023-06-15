@@ -78,8 +78,8 @@ extern Dict*
 dictNew(void);
 extern Dict*
 dictNewCustom(
-    int (*keyCmpFunc)(DictKeyType key1, DictKeyType key2),
-    hash_t (*keyHashFunc)(DictKeyType key)
+    int (*keyCmpFunc)(DictKeyType, DictKeyType),
+    hash_t (*keyHashFunc)(DictKeyType)
 );
 extern Dict*
 dictNewPresized(size_t size);
