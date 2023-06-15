@@ -106,14 +106,14 @@ int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_,
     xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
-        return 0;
+        return -1;
     }
     xobj *valobj = dictGet(db->table, keyobj);
 
     *value_ = (char *)valobj->data;
 
     free(keyobj);
-    return 1;
+    return 0;
 }
 
 int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
@@ -125,7 +125,7 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
     memcpy(keyobj->data, &key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
-        return 0;
+        return -1;
     }
     xobj *valobj = dictGet(db->table, keyobj);
 
@@ -142,7 +142,7 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
     }
 
     free(keyobj);
-    return 1;
+    return 0;
 }
 
 #ifdef HTDB_TEST
