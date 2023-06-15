@@ -58,6 +58,32 @@ void xobjFree(xobj *obj) {
     free(obj);
 }
 
+xobj *xdbGetByInt(xdb *db, uint64_t key_) {
+    uint8_t key_len = sizeof(key_);
+
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
+
+    if (!dictHas(db->table, keyobj)) {
+        return NULL;
+    }
+    xobj *valobj = (xobj *)dictGet(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return valobj;
+}
+
+xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+
+    if (!dictHas(db->table, keyobj)) {
+        return NULL;
+    }
+    xobj *valobj = (xobj *)dictGet(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return valobj;
+}
+
 int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_len) {
     uint8_t key_len = sizeof(key_);
 

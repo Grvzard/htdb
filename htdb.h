@@ -45,6 +45,8 @@ int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len);
 int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_, uint8_t *value_len);
 int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value);
 
+xobj *xdbGetByInt(xdb *db, uint64_t key_);
+xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len);
 
 #ifdef HTDB_TEST
 void htdbTest(void);
