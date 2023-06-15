@@ -29,7 +29,7 @@ int xobjCmp(void *obj1_, void *obj2_) {
 }
 
 xdb *xdbNew(char key_type, char value_type) {
-    xdb *db = malloc(sizeof(xdb));
+    xdb *db = (xdb *)malloc(sizeof(xdb));
     db->table = dictNewCustom(xobjCmp, _xobjGenHash);
 
     return db;
@@ -40,8 +40,12 @@ void xdbFree(xdb *db) {
     free(db);
 }
 
+size_t xdbSize(xdb *db) {
+    return dictLen(db->table);
+}
+
 xobj *xobjNew(uint8_t type, uint8_t *data, uint8_t len) {
-    xobj *obj = malloc(sizeof(xobj) + len);
+    xobj *obj = (xobj *)malloc(sizeof(xobj) + len);
     obj->type = type;
     obj->len = len;
     memcpy(obj->data, data, len);
@@ -94,7 +98,7 @@ int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len) {
     if (!dictHas(db->table, keyobj)) {
         return -1;
     }
-    xobj *valobj = dictGet(db->table, keyobj);
+    xobj *valobj = (xobj *)dictGet(db->table, keyobj);
 
     *value_ = (char *)(&valobj->data);
     *value_len = valobj->len;
@@ -109,7 +113,7 @@ int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_,
     if (!dictHas(db->table, keyobj)) {
         return -1;
     }
-    xobj *valobj = dictGet(db->table, keyobj);
+    xobj *valobj = (xobj *)dictGet(db->table, keyobj);
 
     *value_ = (char *)(&valobj->data);
     *value_len = valobj->len;
@@ -121,7 +125,7 @@ int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_,
 int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
     uint8_t key_len = sizeof(key_);
 
-    xobj *keyobj = malloc(sizeof(xobj) + key_len);
+    xobj *keyobj = (xobj *)malloc(sizeof(xobj) + key_len);
     keyobj->type = XOBJ_TYPE_INT;
     keyobj->len = key_len;
     memcpy(keyobj->data, &key_, key_len);
@@ -129,7 +133,7 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
     if (!dictHas(db->table, keyobj)) {
         return -1;
     }
-    xobj *valobj = dictGet(db->table, keyobj);
+    xobj *valobj = (xobj *)dictGet(db->table, keyobj);
 
     if (valobj->len == 1) {
         *value = *(uint8_t *)valobj->data;

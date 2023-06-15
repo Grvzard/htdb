@@ -25,7 +25,6 @@ typedef enum {
 typedef struct {
     uint8_t type;  // xobj_type
     uint8_t len;
-    xhash_t hash;
     uint8_t data[];
 } xobj;
 
@@ -37,6 +36,7 @@ typedef struct {
 
 xdb *xdbNew(char key_type, char val_type);
 void xdbFree(xdb *db);
+size_t xdbSize(xdb *db);
 // void xdbDump(xdb *db, char *fpath);
 int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_len);
 int _xdbSetIntInt(xdb *db, uint64_t key_, uint64_t value_);
