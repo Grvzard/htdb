@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "dict.h"
 
 typedef uint64_t xhash_t;
@@ -47,6 +48,10 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value);
 
 xobj *xdbGetByInt(xdb *db, uint64_t key_);
 xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len);
+bool xdbHasInt(xdb *db, uint64_t key_);
+bool xdbHasBytes(xdb *db, const char *key_, uint8_t key_len);
+bool xdbDelInt(xdb *db, uint64_t key_);
+bool xdbDelBytes(xdb *db, const char *key_, uint8_t key_len);
 
 #ifdef HTDB_TEST
 void htdbTest(void);

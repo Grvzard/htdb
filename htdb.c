@@ -9,7 +9,7 @@
 
 
 static hash_t _xobjGenHash(void *obj) {
-    return siphash(((xobj *)obj)->data, ((xobj *)obj)->len, "0123456789ABCDEF");
+    return siphash(((xobj *)obj)->data, ((xobj *)obj)->len, (const uint8_t *)"0123456789ABCDEF");
 }
 
 int xobjCmp(void *obj1_, void *obj2_) {
@@ -82,6 +82,46 @@ xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len) {
 
     xobjFree(keyobj);
     return valobj;
+}
+
+bool xdbHasInt(xdb *db, uint64_t key_) {
+    uint8_t key_len = sizeof(key_);
+
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
+
+    bool ret = dictHas(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return ret;
+}
+
+bool xdbHasBytes(xdb *db, const char *key_, uint8_t key_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+
+    bool ret = dictHas(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return ret;
+}
+
+bool xdbDelInt(xdb *db, uint64_t key_) {
+    uint8_t key_len = sizeof(key_);
+
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
+
+    bool ret = dictDel(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return ret;
+}
+
+bool xdbDelBytes(xdb *db, const char *key_, uint8_t key_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+
+    bool ret = dictDel(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return ret;
 }
 
 int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_len) {
