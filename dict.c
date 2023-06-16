@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 #include "dict.h"
@@ -42,7 +43,7 @@ _DictKeys_Free(DictKeys* dk);
 static void
 _DictKeys_ShallowFree(DictKeys* dk);
 static ix_t
-_DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash);
+_DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash, bool skip_dummy);
 static ix_t
 _DictKeys_GetIndex(const DictKeys* dk, size_t i);
 static void
@@ -125,17 +126,21 @@ dictSet(Dict* mp, DictKeyType key, DictValueType value) {
 extern int
 dictHas(Dict* mp, DictKeyType key) {
     DictKeys* dk = mp->keys;
-    ix_t ix = _DictKeys_Lookup(dk, key, dk->keyHashFunc(key));
+    ix_t ix = _DictKeys_Lookup(dk, key, dk->keyHashFunc(key), true);
     return (ix >= 0);
 }
 
 extern int
 dictDel(Dict* mp, DictKeyType key) {
     DictKeys* dk = mp->keys;
-    ix_t ix = _DictKeys_Lookup(dk, key, dk->keyHashFunc(key));
+    ix_t ix = _DictKeys_Lookup(dk, key, dk->keyHashFunc(key), true);
     if (ix >= 0) {
         // Delete Key
         size_t hashpos = _DictKeys_GetHashPosition(dk, dk->keyHashFunc(key), ix);
+
+        DictKeyEntry ep = DK_ENTRIES(dk)[ix];
+        ep.hash = 0;
+
         _DictKeys_SetIndex(dk, hashpos, DKIX_DUMMY);
         mp->used--;
     } else {
@@ -184,8 +189,10 @@ _dictResize(Dict* mp) {
     } else {
         DictKeyEntry* ep = old_entries;
         for (ix_t ix = 0; ix < used; ix++, ep++) {
-            for (; _DictKeys_Lookup(oldkeys, ep->key, ep->hash) < 0;) {
-                _DictKeyEntry_Free(ep);
+            for (; (ep->hash == 0);) {
+                if (ep->key != NULL) {
+                    _DictKeyEntry_Free(ep);
+                }
                 ep++;
             }
             size_t i = _DictKeys_FindEmptySlot(mp->keys, ep->hash);
@@ -211,7 +218,7 @@ _DictKeys_BuildIndices(DictKeys* dk, DictKeyEntry* ep, size_t nentries) {
 static int
 _DictKeys_Get(DictKeys* dk, DictKeyType key, DictValueType* value) {
     int err = 0;
-    ix_t ix = _DictKeys_Lookup(dk, key, dk->keyHashFunc(key));
+    ix_t ix = _DictKeys_Lookup(dk, key, dk->keyHashFunc(key), true);
     if (ix >= 0) {
         *value = DK_ENTRIES(dk)[ix].value;
     } else {
@@ -224,7 +231,7 @@ static int
 _DictKeys_Set(DictKeys* dk, DictKeyType key, DictValueType value) {
     hash_t hash = dk->keyHashFunc(key);
     assert(dk->dk_usable > 0);
-    ix_t ix = _DictKeys_Lookup(dk, key, hash);
+    ix_t ix = _DictKeys_Lookup(dk, key, hash, false);
     DictKeyEntry* ep;
     if (ix < 0) {
         // Insert Key
@@ -277,8 +284,9 @@ _DictKeys_New(Dict *mp, uint8_t log2_size) {
     return dk;
 }
 
+// params: skip_dummy actually will only be false when called from _DictKeys_Set
 static ix_t
-_DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash) {
+_DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash, bool skip_dummy) {
     ix_t ix;
     DictKeyEntry* ep0 = DK_ENTRIES(dk);
     size_t perturb = (size_t)hash;
@@ -293,8 +301,14 @@ _DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash) {
             if (dk->keyCmpFunc(ep->key, key) == 1) {
                 return ix;
             }
-        } else {
+        } else if (ix == DKIX_DUMMY) {
+            if (!skip_dummy) {
+                return ix;
+            }
+        } else if (ix == DKIX_EMPTY) {
             return ix;
+        } else {
+            assert(0);
         }
         perturb >>= PERTURB_SHIFT;
         i = (i * 5 + perturb + 1) % size;
