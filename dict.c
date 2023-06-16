@@ -196,6 +196,7 @@ _dictResize(Dict* mp) {
                 ep++;
             }
             size_t i = _DictKeys_FindEmptySlot(mp->keys, ep->hash);
+            memcpy(&new_entries[ix], ep, sizeof(DictKeyEntry));
             _DictKeys_SetIndex(mp->keys, i, ix);
         }
     }
