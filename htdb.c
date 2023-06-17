@@ -49,7 +49,7 @@ size_t xdbSize(xdb *db) {
     return dictLen(db->table);
 }
 
-xobj *xobjNew(uint8_t type, uint8_t *data, uint8_t len) {
+xobj *xobjNew(uint8_t type, char *data, xobjlen_t len) {
     xobj *obj = (xobj *)malloc(sizeof(xobj) + len);
     obj->type = type;
     obj->len = len;
@@ -64,9 +64,9 @@ void xobjFree(xobj *obj) {
 }
 
 xobj *xdbGetByInt(xdb *db, uint64_t key_) {
-    uint8_t key_len = sizeof(key_);
+    xobjlen_t key_len = sizeof(key_);
 
-    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (char *)&key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
         return NULL;
@@ -77,8 +77,8 @@ xobj *xdbGetByInt(xdb *db, uint64_t key_) {
     return valobj;
 }
 
-xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len) {
-    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+xobj *xdbGetByBytes(xdb *db, const char *key_, xobjlen_t key_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
         return NULL;
@@ -90,9 +90,9 @@ xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len) {
 }
 
 bool xdbHasInt(xdb *db, uint64_t key_) {
-    uint8_t key_len = sizeof(key_);
+    xobjlen_t key_len = sizeof(key_);
 
-    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (char *)&key_, key_len);
 
     bool ret = dictHas(db->table, keyobj);
 
@@ -100,8 +100,8 @@ bool xdbHasInt(xdb *db, uint64_t key_) {
     return ret;
 }
 
-bool xdbHasBytes(xdb *db, const char *key_, uint8_t key_len) {
-    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+bool xdbHasBytes(xdb *db, const char *key_, xobjlen_t key_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
 
     bool ret = dictHas(db->table, keyobj);
 
@@ -110,18 +110,9 @@ bool xdbHasBytes(xdb *db, const char *key_, uint8_t key_len) {
 }
 
 bool xdbDelInt(xdb *db, uint64_t key_) {
-    uint8_t key_len = sizeof(key_);
+    xobjlen_t key_len = sizeof(key_);
 
-    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
-
-    bool ret = dictDel(db->table, keyobj);
-
-    xobjFree(keyobj);
-    return ret;
-}
-
-bool xdbDelBytes(xdb *db, const char *key_, uint8_t key_len) {
-    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (char *)&key_, key_len);
 
     bool ret = dictDel(db->table, keyobj);
 
@@ -129,11 +120,20 @@ bool xdbDelBytes(xdb *db, const char *key_, uint8_t key_len) {
     return ret;
 }
 
-int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_len) {
-    uint8_t key_len = sizeof(key_);
+bool xdbDelBytes(xdb *db, const char *key_, xobjlen_t key_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
 
-    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
-    xobj *valobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)value_, value_len);
+    bool ret = dictDel(db->table, keyobj);
+
+    xobjFree(keyobj);
+    return ret;
+}
+
+int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, xobjlen_t value_len) {
+    xobjlen_t key_len = sizeof(key_);
+
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (char *)&key_, key_len);
+    xobj *valobj = xobjNew(XOBJ_TYPE_BYTES, (char *)value_, value_len);
 
     dictSet(db->table, (void *)keyobj, (void *)valobj);
 
@@ -141,30 +141,30 @@ int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_le
 }
 
 int _xdbSetIntInt(xdb *db, uint64_t key_, uint64_t value_) {
-    uint8_t key_len = sizeof(key_);
-    uint8_t value_len = sizeof(value_);
+    xobjlen_t key_len = sizeof(key_);
+    xobjlen_t value_len = sizeof(value_);
 
-    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
-    xobj *valobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&value_, value_len);
-
-    dictSet(db->table, (void *)keyobj, (void *)valobj);
-
-    return 1;
-}
-
-int _xdbSetBytesBytes(xdb *db, const char *key_, uint8_t key_len, const char *value_, uint8_t value_len) {
-    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
-    xobj *valobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)value_, value_len);
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (char *)&key_, key_len);
+    xobj *valobj = xobjNew(XOBJ_TYPE_INT, (char *)&value_, value_len);
 
     dictSet(db->table, (void *)keyobj, (void *)valobj);
 
     return 1;
 }
 
-int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len) {
-    uint8_t key_len = sizeof(key_);
+int _xdbSetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, const char *value_, xobjlen_t value_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
+    xobj *valobj = xobjNew(XOBJ_TYPE_BYTES, (char *)value_, value_len);
 
-    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (uint8_t *)&key_, key_len);
+    dictSet(db->table, (void *)keyobj, (void *)valobj);
+
+    return 1;
+}
+
+int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, xobjlen_t *value_len) {
+    xobjlen_t key_len = sizeof(key_);
+
+    xobj *keyobj = xobjNew(XOBJ_TYPE_INT, (char *)&key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
         return -1;
@@ -178,8 +178,8 @@ int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len) {
     return 0;
 }
 
-int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_, uint8_t *value_len) {
-    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (uint8_t *)key_, key_len);
+int _xdbGetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, char **value_, xobjlen_t *value_len) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
         return -1;
@@ -194,7 +194,7 @@ int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_,
 }
 
 int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
-    uint8_t key_len = sizeof(key_);
+    xobjlen_t key_len = sizeof(key_);
 
     xobj *keyobj = (xobj *)malloc(sizeof(xobj) + key_len);
     keyobj->type = XOBJ_TYPE_INT;
@@ -229,7 +229,7 @@ void htdbTest() {
     xdb *db = xdbNew('i', 'b');
 
     char *value;
-    uint8_t value_len;
+    xobjlen_t value_len;
 
     _xdbSetBytesBytes(db, "wb", 2, "hello2", 7);
     if (_xdbGetBytesBytes(db, "wb", 2, &value, &value_len) == 0) {

@@ -12,6 +12,7 @@ extern "C" {
 
 // >> settings
 // #define HTDB_TEST
+typedef uint16_t xobjlen_t;
 // << settings
 
 typedef enum {
@@ -23,9 +24,9 @@ typedef enum {
 } xobj_type;
 
 typedef struct {
+    xobjlen_t len;
     uint8_t type;  // xobj_type
-    uint8_t len;
-    uint8_t data[];
+    char data[];
 } xobj;
 
 typedef struct {
@@ -38,19 +39,19 @@ xdb *xdbNew(char key_type, char val_type);
 void xdbFree(xdb *db);
 size_t xdbSize(xdb *db);
 // void xdbDump(xdb *db, char *fpath);
-int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, uint8_t value_len);
+int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, xobjlen_t value_len);
 int _xdbSetIntInt(xdb *db, uint64_t key_, uint64_t value_);
-int _xdbSetBytesBytes(xdb *db, const char *key_, uint8_t key_len, const char *value_, uint8_t value_len);
-int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, uint8_t *value_len);
-int _xdbGetBytesBytes(xdb *db, const char *key_, uint8_t key_len, char **value_, uint8_t *value_len);
+int _xdbSetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, const char *value_, xobjlen_t value_len);
+int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, xobjlen_t *value_len);
+int _xdbGetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, char **value_, xobjlen_t *value_len);
 int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value);
 
 xobj *xdbGetByInt(xdb *db, uint64_t key_);
-xobj *xdbGetByBytes(xdb *db, const char *key_, uint8_t key_len);
+xobj *xdbGetByBytes(xdb *db, const char *key_, xobjlen_t key_len);
 bool xdbHasInt(xdb *db, uint64_t key_);
-bool xdbHasBytes(xdb *db, const char *key_, uint8_t key_len);
+bool xdbHasBytes(xdb *db, const char *key_, xobjlen_t key_len);
 bool xdbDelInt(xdb *db, uint64_t key_);
-bool xdbDelBytes(xdb *db, const char *key_, uint8_t key_len);
+bool xdbDelBytes(xdb *db, const char *key_, xobjlen_t key_len);
 
 #ifdef HTDB_TEST
 void htdbTest(void);
