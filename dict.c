@@ -138,8 +138,8 @@ dictDel(Dict* mp, DictKeyType key) {
         // Delete Key
         size_t hashpos = _DictKeys_GetHashPosition(dk, dk->keyHashFunc(key), ix);
 
-        DictKeyEntry ep = DK_ENTRIES(dk)[ix];
-        ep.hash = 0;
+        DictKeyEntry *ep = &DK_ENTRIES(dk)[ix];
+        ep->hash = 0;
 
         _DictKeys_SetIndex(dk, hashpos, DKIX_DUMMY);
         mp->used--;
@@ -165,11 +165,12 @@ dictIterNext(DictIter *iter, DictKeyType *key_, DictValueType *val_) {
     DictKeys* dk = iter->mp->keys;
     DictKeyEntry* entries = DK_ENTRIES(dk);
     size_t i = iter->pos;
-    for (; i < dk->dk_nentries; i++, iter->pos++) {
+    for (; i < dk->dk_nentries; i++) {
+        ++iter->pos;
+        printf("i: %d, hash: %ld\n", i, entries[i].hash);
         if (entries[i].hash != 0) {
             *key_ = entries[i].key;
             *val_ = entries[i].value;
-            iter->pos++;
             return 1;
         }
     }
