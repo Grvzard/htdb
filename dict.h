@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // >> settings
 // #define DICT_TEST
@@ -72,6 +73,11 @@ typedef struct {
     DictKeys* keys;
 } Dict;
 
+typedef struct {
+    Dict* mp;
+    size_t pos;
+} DictIter;
+
 
 // >> external API
 extern Dict*
@@ -95,6 +101,8 @@ extern size_t
 dictLen(Dict* mp);
 extern void
 dictFree(Dict* d);
+extern bool
+dictIterNext(DictIter* iter, DictKeyType* key, DictValueType* value);
 #ifdef DICT_TEST
 extern void
 dictTest1(void);

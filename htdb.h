@@ -38,7 +38,8 @@ typedef struct {
 xdb *xdbNew(char key_type, char val_type);
 void xdbFree(xdb *db);
 size_t xdbSize(xdb *db);
-// void xdbDump(xdb *db, char *fpath);
+void xdbDump(xdb *db, FILE *stream);
+void xdbLoad(xdb *db, FILE *stream);
 int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, xobjlen_t value_len);
 int _xdbSetIntInt(xdb *db, uint64_t key_, uint64_t value_);
 int _xdbSetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, const char *value_, xobjlen_t value_len);

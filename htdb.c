@@ -9,6 +9,8 @@
 
 #define UNUSED(x) (void)(x)
 
+#define RECORD_START_MARK ('\x40')  // '@'
+
 
 static hash_t _xobjGenHash(void *obj) {
     return siphash(((xobj *)obj)->data, ((xobj *)obj)->len, (const uint8_t *)"0123456789ABCDEF");
@@ -61,6 +63,46 @@ xobj *xobjNew(uint8_t type, char *data, xobjlen_t len) {
 // inner dict will call free(obj) directly, so the impl here should not do anything more
 void xobjFree(xobj *obj) {
     free(obj);
+}
+
+void xdbDump(xdb *db, FILE *stream) {
+    DictIter iter = {db->table, 0};
+    
+    xobj *keyobj, *valobj;
+    
+    for (; dictIterNext(&iter, (void **)&keyobj, (void **)&valobj); ) {
+        fputc(RECORD_START_MARK, stream); // mark the start of a record
+        fwrite(&keyobj->type, sizeof(uint8_t), 1, stream);
+        fwrite(&valobj->type, sizeof(uint8_t), 1, stream);
+        fwrite(&keyobj->len, sizeof(xobjlen_t), 1, stream);
+        fwrite(&valobj->len, sizeof(xobjlen_t), 1, stream);
+        fwrite(keyobj->data, keyobj->len, 1, stream);
+        fwrite(valobj->data, valobj->len, 1, stream);
+    }
+}
+
+void xdbLoad(xdb *db, FILE *stream) {
+    char start_mark;
+    uint8_t key_type, value_type;
+    xobjlen_t key_len, value_len;
+    char *data_buffer = (char *)malloc(65535);  // the max size of xobjlen_t
+
+    while (fgetc(stream) == RECORD_START_MARK) {
+        // assert();
+
+        fread(&key_type, sizeof(uint8_t), 1, stream);
+        fread(&value_type, sizeof(uint8_t), 1, stream);
+        fread(&key_len, sizeof(xobjlen_t), 1, stream);
+        fread(&value_len, sizeof(xobjlen_t), 1, stream);
+
+        fread(data_buffer, key_len, 1, stream);
+        fread(data_buffer, value_len, 1, stream);
+        xobj *keyobj = xobjNew(key_type, data_buffer, key_len);
+        xobj *valobj = xobjNew(value_type, data_buffer, value_len);
+
+        dictSet(db->table, keyobj, valobj);
+    }
+    free(data_buffer);
 }
 
 xobj *xdbGetByInt(xdb *db, uint64_t key_) {
