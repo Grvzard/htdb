@@ -7,6 +7,8 @@
 #include "siphash.h"
 #include "htdb.h"
 
+#define UNUSED(x) (void)(x)
+
 
 static hash_t _xobjGenHash(void *obj) {
     return siphash(((xobj *)obj)->data, ((xobj *)obj)->len, (const uint8_t *)"0123456789ABCDEF");
@@ -31,6 +33,9 @@ int xobjCmp(void *obj1_, void *obj2_) {
 xdb *xdbNew(char key_type, char value_type) {
     xdb *db = (xdb *)malloc(sizeof(xdb));
     db->table = dictNewCustom(xobjCmp, _xobjGenHash);
+
+    UNUSED(key_type);
+    UNUSED(value_type);
 
     return db;
 }

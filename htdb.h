@@ -9,10 +9,9 @@ extern "C" {
 #include <stdbool.h>
 #include "dict.h"
 
-typedef uint64_t xhash_t;
 
 // >> settings
-#define HTDB_TEST
+// #define HTDB_TEST
 // << settings
 
 typedef enum {
