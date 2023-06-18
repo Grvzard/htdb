@@ -167,7 +167,6 @@ dictIterNext(DictIter *iter, DictKeyType *key_, DictValueType *val_) {
     size_t i = iter->pos;
     for (; i < dk->dk_nentries; i++) {
         ++iter->pos;
-        printf("i: %d, hash: %ld\n", i, entries[i].hash);
         if (entries[i].hash != 0) {
             *key_ = entries[i].key;
             *val_ = entries[i].value;

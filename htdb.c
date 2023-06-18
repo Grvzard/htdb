@@ -88,7 +88,6 @@ void xdbLoad(xdb *db, FILE *stream) {
     char *data_buffer = (char *)malloc(65535);  // the max size of xobjlen_t
 
     while (fgetc(stream) == RECORD_START_MARK) {
-        // assert();
 
         fread(&key_type, sizeof(uint8_t), 1, stream);
         fread(&value_type, sizeof(uint8_t), 1, stream);
@@ -96,8 +95,8 @@ void xdbLoad(xdb *db, FILE *stream) {
         fread(&value_len, sizeof(xobjlen_t), 1, stream);
 
         fread(data_buffer, key_len, 1, stream);
-        fread(data_buffer, value_len, 1, stream);
         xobj *keyobj = xobjNew(key_type, data_buffer, key_len);
+        fread(data_buffer, value_len, 1, stream);
         xobj *valobj = xobjNew(value_type, data_buffer, value_len);
 
         dictSet(db->table, keyobj, valobj);
