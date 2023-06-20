@@ -82,7 +82,6 @@ void xdbDump(xdb *db, FILE *stream) {
 }
 
 void xdbLoad(xdb *db, FILE *stream) {
-    char start_mark;
     uint8_t key_type, value_type;
     xobjlen_t key_len, value_len;
     char *data_buffer = (char *)malloc(65535);  // the max size of xobjlen_t

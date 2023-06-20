@@ -312,7 +312,7 @@ _DictKeys_Lookup(DictKeys* dk, DictKeyType key, hash_t hash, bool skip_dummy) {
     size_t mask = DK_MASK(dk);
     size_t i = (size_t)hash & mask;
     for (; ; ) {
-        ix_t ix = _DictKeys_GetIndex(dk, i);
+        ix = _DictKeys_GetIndex(dk, i);
         if (ix >= 0) {
             DictKeyEntry* ep = &ep0[ix];
             if (dk->keyCmpFunc(ep->key, key) == 1) {
