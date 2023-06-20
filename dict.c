@@ -7,7 +7,7 @@
 #include <string.h>
 #include "dict.h"
 
-typedef int32_t ix_t;
+typedef int64_t ix_t;
 
 #define DKIX_EMPTY (-1)
 #define DKIX_DUMMY (-2)
