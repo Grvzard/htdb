@@ -201,6 +201,15 @@ int _xdbSetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, const char *
     return 1;
 }
 
+int _xdbSetBytesInt(xdb *db, const char *key_, xobjlen_t key_len, uint64_t value_) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
+    xobj *valobj = xobjNew(XOBJ_TYPE_INT, (char *)&value_, sizeof(value_));
+
+    dictSet(db->table, (void *)keyobj, (void *)valobj);
+
+    return 1;
+}
+
 int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, xobjlen_t *value_len) {
     xobjlen_t key_len = sizeof(key_);
 
@@ -240,6 +249,30 @@ int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value) {
     keyobj->type = XOBJ_TYPE_INT;
     keyobj->len = key_len;
     memcpy(keyobj->data, &key_, key_len);
+
+    if (!dictHas(db->table, keyobj)) {
+        return -1;
+    }
+    xobj *valobj = (xobj *)dictGet(db->table, keyobj);
+
+    if (valobj->len == 1) {
+        *value = *(uint8_t *)valobj->data;
+    } else if (valobj->len == 2) {
+        *value = *(uint16_t *)valobj->data;
+    } else if (valobj->len == 4) {
+        *value = *(uint32_t *)valobj->data;
+    } else if (valobj->len == 8) {
+        *value = *(uint64_t *)valobj->data;
+    } else {
+        assert(0);
+    }
+
+    free(keyobj);
+    return 0;
+}
+
+int _xdbGetBytesInt(xdb *db, const char *key_, xobjlen_t key_len, uint64_t *value) {
+    xobj *keyobj = xobjNew(XOBJ_TYPE_BYTES, (char *)key_, key_len);
 
     if (!dictHas(db->table, keyobj)) {
         return -1;

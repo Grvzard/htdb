@@ -43,9 +43,11 @@ void xdbLoad(xdb *db, FILE *stream);
 int _xdbSetIntBytes(xdb *db, uint64_t key_, const char *value_, xobjlen_t value_len);
 int _xdbSetIntInt(xdb *db, uint64_t key_, uint64_t value_);
 int _xdbSetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, const char *value_, xobjlen_t value_len);
+int _xdbSetBytesInt(xdb *db, const char *key_, xobjlen_t key_len, uint64_t value_);
 int _xdbGetIntBytes(xdb *db, uint64_t key_, char **value_, xobjlen_t *value_len);
 int _xdbGetBytesBytes(xdb *db, const char *key_, xobjlen_t key_len, char **value_, xobjlen_t *value_len);
 int _xdbGetIntInt(xdb *db, uint64_t key_, uint64_t *value);
+int _xdbGetBytesInt(xdb *db, const char *key_, xobjlen_t key_len, uint64_t *value);
 
 xobj *xdbGetByInt(xdb *db, uint64_t key_);
 xobj *xdbGetByBytes(xdb *db, const char *key_, xobjlen_t key_len);
